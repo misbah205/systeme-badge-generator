@@ -4,6 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Systeme.io Badge Generator</title>
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-51RYFCHGEE"></script>
+    <script>
+        // Google Analytics Measurement ID
+        const GA_ID = 'G-51RYFCHGEE';
+        
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', GA_ID, {
+            page_title: 'Systeme Badge Generator',
+            page_location: window.location.href
+        });
+        
+        // Enhanced event tracking
+        function trackEvent(action, category, label, value) {
+            gtag('event', action, {
+                event_category: category,
+                event_label: label,
+                value: value,
+                custom_parameter_1: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
+            });
+            
+            // Also log to console for debugging (remove in production)
+            console.log('Analytics Event:', { action, category, label, value });
+        }
+        
+        // Track page load
+        gtag('event', 'page_view', {
+            page_title: 'Badge Generator Home',
+            page_location: window.location.href
+        });
+        
+        // Track time on page
+        let startTime = Date.now();
+        let timeTracked = false;
+        
+        function trackTimeOnPage() {
+            if (!timeTracked) {
+                const timeSpent = Math.round((Date.now() - startTime) / 1000);
+                trackEvent('time_on_page', 'engagement', 'seconds', timeSpent);
+                timeTracked = true;
+            }
+        }
+        
+        // Track when user leaves
+        window.addEventListener('beforeunload', trackTimeOnPage);
+        
+        // Track after 30 seconds of activity
+        setTimeout(trackTimeOnPage, 30000);
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -288,7 +341,7 @@
                 <div id="videoSection" class="video-section">
                     <h3>Tutorial Video</h3>
                     <p>Learn how to use the Systeme.io Badge Generator</p>
-                    <a href="https://www.loom.com/share/67b340f62e014bab82883c545742792f" target="_blank" class="video-link">
+                    <a href="https://www.loom.com/share/67b340f62e014bab82883c545742792f" target="_blank" class="video-link" onclick="trackVideoClick()">
                         <svg style="width: 20px; height: 20px; margin-right: 8px;" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
                         </svg>
@@ -301,7 +354,7 @@
                 <div>
                     <div class="form-group">
                         <label class="label">Affiliate Link *</label>
-                        <input type="url" id="affiliateLink" class="input" placeholder="https://your-affiliate-link.com">
+                        <input type="url" id="affiliateLink" class="input" placeholder="https://your-affiliate-link.com" onblur="trackAffiliateEntry()">
                     </div>
 
                     <div class="form-group">
@@ -322,7 +375,7 @@
 
                     <div class="form-group">
                         <label class="label">Animation</label>
-                        <select id="selectedAnimation" class="select">
+                        <select id="selectedAnimation" class="select" onchange="trackAnimationSelection()">
                             <option value="none">None</option>
                             <option value="pulse">Pulse</option>
                             <option value="bounce">Bounce</option>
@@ -352,7 +405,7 @@
 
                     <div id="customTextDiv" class="form-group hidden">
                         <label class="label">Custom Text</label>
-                        <input type="text" id="customText" class="input" placeholder="Enter your custom text" oninput="updatePreview()">
+                        <input type="text" id="customText" class="input" placeholder="Enter your custom text" oninput="updatePreview()" onblur="trackCustomText()">
                     </div>
 
                     <button class="btn-primary" onclick="generateCode()">Generate Code</button>
@@ -361,7 +414,7 @@
                 <div class="preview-section">
                     <h3>Preview</h3>
                     <div class="preview-area">
-                        <div class="badge-preview" id="previewBadge">
+                        <div class="badge-preview" id="previewBadge" onclick="trackPreviewClick()">
                             <svg class="badge-icon" id="previewIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2Z"/>
                             </svg>
@@ -408,6 +461,10 @@
             trophy: 'M7 8h10v12H7zM5 8h2V6a2 2 0 012-2h6a2 2 0 012 2v2h2M21 12a4 4 0 01-4 4H7a4 4 0 01-4-4'
         };
 
+        // Interaction counters
+        let interactionCount = 0;
+        let hasGeneratedCode = false;
+
         function toggleVideo() {
             const videoSection = document.getElementById('videoSection');
             const videoText = document.getElementById('videoText');
@@ -416,10 +473,40 @@
             if (isHidden) {
                 videoSection.style.display = 'block';
                 videoText.textContent = 'Hide Video Tutorial';
+                trackEvent('video_section_opened', 'engagement', 'tutorial_access');
             } else {
                 videoSection.style.display = 'none';
                 videoText.textContent = 'Watch How to Use This Tool';
+                trackEvent('video_section_closed', 'engagement', 'tutorial_exit');
             }
+        }
+
+        function trackVideoClick() {
+            trackEvent('video_clicked', 'engagement', 'loom_tutorial', 1);
+        }
+
+        function trackAffiliateEntry() {
+            const link = document.getElementById('affiliateLink').value;
+            if (link.trim()) {
+                trackEvent('affiliate_link_entered', 'form_completion', 'step_1', 1);
+            }
+        }
+
+        function trackAnimationSelection() {
+            const animation = document.getElementById('selectedAnimation').value;
+            trackEvent('animation_selected', 'customization', animation);
+            interactionCount++;
+        }
+
+        function trackCustomText() {
+            const customText = document.getElementById('customText').value;
+            if (customText.trim()) {
+                trackEvent('custom_text_entered', 'customization', 'user_text', customText.length);
+            }
+        }
+
+        function trackPreviewClick() {
+            trackEvent('preview_clicked', 'engagement', 'badge_interaction');
         }
 
         function handleTextChange() {
@@ -431,6 +518,9 @@
             } else {
                 customTextDiv.classList.add('hidden');
             }
+            
+            trackEvent('text_option_selected', 'customization', textOption.value);
+            interactionCount++;
             updatePreview();
         }
 
@@ -450,6 +540,10 @@
             } else {
                 previewText.style.display = 'none';
             }
+            
+            // Track icon selection
+            trackEvent('icon_selected', 'customization', selectedIcon.value);
+            interactionCount++;
         }
 
         function getDisplayText() {
@@ -493,12 +587,22 @@
             
             if (!affiliateLink.value.trim()) {
                 alert('Please enter an affiliate link');
+                trackEvent('generate_failed', 'conversion', 'missing_affiliate_link', 0);
                 return;
             }
 
             const iconSvg = iconPaths[selectedIcon.value];
             const animationCSS = getAnimationCSS(selectedAnimation.value);
             const displayText = getDisplayText();
+            
+            // Track successful code generation with detailed data
+            trackEvent('code_generated', 'conversion', 'success', 1);
+            trackEvent('final_animation_choice', 'conversion_detail', selectedAnimation.value);
+            trackEvent('final_icon_choice', 'conversion_detail', selectedIcon.value);
+            trackEvent('final_text_choice', 'conversion_detail', document.getElementById('textOption').value);
+            trackEvent('interaction_count', 'engagement', 'total_customizations', interactionCount);
+            
+            hasGeneratedCode = true;
             
             const code = `<div id="systeme-badge" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
   <style>
@@ -551,34 +655,4 @@
   </style>
   <div class="systeme-badge-wrapper">
     <a href="${affiliateLink.value}" target="_blank" rel="noopener noreferrer" class="systeme-badge-container">
-      <svg class="systeme-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="${iconSvg}"/>
-      </svg>
-      ${displayText ? `<span class="systeme-badge-text">${displayText}</span>` : ''}
-    </a>
-  </div>
-</div>`;
-
-            document.getElementById('generatedCode').textContent = code;
-            document.getElementById('codeSection').classList.remove('hidden');
-            document.getElementById('instructions').classList.remove('hidden');
-        }
-
-        function copyCode() {
-            const code = document.getElementById('generatedCode');
-            const copyText = document.getElementById('copyText');
-            
-            navigator.clipboard.writeText(code.textContent).then(() => {
-                copyText.textContent = 'Copied!';
-                setTimeout(() => {
-                    copyText.textContent = 'Copy Code';
-                }, 2000);
-            }).catch(() => {
-                alert('Failed to copy code. Please select and copy manually.');
-            });
-        }
-
-        updatePreview();
-    </script>
-</body>
-</html>
+      <svg class="systeme-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
