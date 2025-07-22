@@ -8,13 +8,10 @@
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-51RYFCHGEE"></script>
     <script>
-        // Google Analytics Measurement ID
-        const GA_ID = 'G-51RYFCHGEE';
-        
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', GA_ID, {
+        gtag('config', 'G-51RYFCHGEE', {
             page_title: 'Systeme Badge Generator',
             page_location: window.location.href
         });
@@ -24,11 +21,10 @@
             gtag('event', action, {
                 event_category: category,
                 event_label: label,
-                value: value,
-                custom_parameter_1: navigator.userAgent.includes('Mobile') ? 'mobile' : 'desktop'
+                value: value
             });
             
-            // Also log to console for debugging (remove in production)
+            // Also log to console for debugging
             console.log('Analytics Event:', { action, category, label, value });
         }
         
@@ -37,24 +33,6 @@
             page_title: 'Badge Generator Home',
             page_location: window.location.href
         });
-        
-        // Track time on page
-        let startTime = Date.now();
-        let timeTracked = false;
-        
-        function trackTimeOnPage() {
-            if (!timeTracked) {
-                const timeSpent = Math.round((Date.now() - startTime) / 1000);
-                trackEvent('time_on_page', 'engagement', 'seconds', timeSpent);
-                timeTracked = true;
-            }
-        }
-        
-        // Track when user leaves
-        window.addEventListener('beforeunload', trackTimeOnPage);
-        
-        // Track after 30 seconds of activity
-        setTimeout(trackTimeOnPage, 30000);
     </script>
     
     <style>
@@ -463,7 +441,6 @@
 
         // Interaction counters
         let interactionCount = 0;
-        let hasGeneratedCode = false;
 
         function toggleVideo() {
             const videoSection = document.getElementById('videoSection');
@@ -595,14 +572,12 @@
             const animationCSS = getAnimationCSS(selectedAnimation.value);
             const displayText = getDisplayText();
             
-            // Track successful code generation with detailed data
+            // Track successful code generation
             trackEvent('code_generated', 'conversion', 'success', 1);
             trackEvent('final_animation_choice', 'conversion_detail', selectedAnimation.value);
             trackEvent('final_icon_choice', 'conversion_detail', selectedIcon.value);
             trackEvent('final_text_choice', 'conversion_detail', document.getElementById('textOption').value);
             trackEvent('interaction_count', 'engagement', 'total_customizations', interactionCount);
-            
-            hasGeneratedCode = true;
             
             const code = `<div id="systeme-badge" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
   <style>
@@ -655,4 +630,37 @@
   </style>
   <div class="systeme-badge-wrapper">
     <a href="${affiliateLink.value}" target="_blank" rel="noopener noreferrer" class="systeme-badge-container">
-      <svg class="systeme-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+      <svg class="systeme-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="${iconSvg}"/>
+      </svg>
+      ${displayText ? `<span class="systeme-badge-text">${displayText}</span>` : ''}
+    </a>
+  </div>
+</div>`;
+
+            document.getElementById('generatedCode').textContent = code;
+            document.getElementById('codeSection').classList.remove('hidden');
+            document.getElementById('instructions').classList.remove('hidden');
+        }
+
+        function copyCode() {
+            const code = document.getElementById('generatedCode');
+            const copyText = document.getElementById('copyText');
+            
+            navigator.clipboard.writeText(code.textContent).then(() => {
+                copyText.textContent = 'Copied!';
+                trackEvent('code_copied', 'conversion', 'success');
+                setTimeout(() => {
+                    copyText.textContent = 'Copy Code';
+                }, 2000);
+            }).catch(() => {
+                alert('Failed to copy code. Please select and copy manually.');
+                trackEvent('code_copy_failed', 'conversion', 'clipboard_error');
+            });
+        }
+
+        // Initialize preview
+        updatePreview();
+    </script>
+</body>
+</html>
