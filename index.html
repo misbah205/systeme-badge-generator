@@ -352,6 +352,35 @@
                     </div>
 
                     <div class="form-group">
+                        <label class="label">Badge Colors</label>
+                        <select id="colorOption" class="select" onchange="handleColorChange()">
+                            <option value="default">Default Gradient (Blue to Purple)</option>
+                            <option value="red">Red Gradient</option>
+                            <option value="green">Green Gradient</option>
+                            <option value="orange">Orange Gradient</option>
+                            <option value="pink">Pink Gradient</option>
+                            <option value="teal">Teal Gradient</option>
+                            <option value="purple">Purple Gradient</option>
+                            <option value="dark">Dark Gradient</option>
+                            <option value="custom">Custom Colors</option>
+                        </select>
+                    </div>
+
+                    <div id="customColorDiv" class="form-group hidden">
+                        <label class="label">Custom Badge Colors</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <div>
+                                <label class="label" style="font-size: 12px; margin-bottom: 4px;">Start Color</label>
+                                <input type="color" id="startColor" class="input" value="#3b82f6" onchange="updatePreview()" style="height: 40px; padding: 4px;">
+                            </div>
+                            <div>
+                                <label class="label" style="font-size: 12px; margin-bottom: 4px;">End Color</label>
+                                <input type="color" id="endColor" class="input" value="#8b5cf6" onchange="updatePreview()" style="height: 40px; padding: 4px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
                         <label class="label">Animation</label>
                         <select id="selectedAnimation" class="select" onchange="trackAnimationSelection()">
                             <option value="none">None</option>
@@ -439,8 +468,45 @@
             trophy: 'M7 8h10v12H7zM5 8h2V6a2 2 0 012-2h6a2 2 0 012 2v2h2M21 12a4 4 0 01-4 4H7a4 4 0 01-4-4'
         };
 
+        // Color schemes
+        const colorSchemes = {
+            default: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+            red: 'linear-gradient(135deg, #ef4444, #dc2626)',
+            green: 'linear-gradient(135deg, #10b981, #059669)',
+            orange: 'linear-gradient(135deg, #f59e0b, #d97706)',
+            pink: 'linear-gradient(135deg, #ec4899, #be185d)',
+            teal: 'linear-gradient(135deg, #14b8a6, #0d9488)',
+            purple: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+            dark: 'linear-gradient(135deg, #374151, #1f2937)'
+        };
+
         // Interaction counters
         let interactionCount = 0;
+
+        function getSelectedColors() {
+            const colorOption = document.getElementById('colorOption').value;
+            if (colorOption === 'custom') {
+                const startColor = document.getElementById('startColor').value;
+                const endColor = document.getElementById('endColor').value;
+                return `linear-gradient(135deg, ${startColor}, ${endColor})`;
+            }
+            return colorSchemes[colorOption] || colorSchemes.default;
+        }
+
+        function handleColorChange() {
+            const colorOption = document.getElementById('colorOption');
+            const customColorDiv = document.getElementById('customColorDiv');
+            
+            if (colorOption.value === 'custom') {
+                customColorDiv.classList.remove('hidden');
+            } else {
+                customColorDiv.classList.add('hidden');
+            }
+            
+            trackEvent('color_option_selected', 'customization', colorOption.value);
+            interactionCount++;
+            updatePreview();
+        }
 
         function toggleVideo() {
             const videoSection = document.getElementById('videoSection');
@@ -505,6 +571,7 @@
             const selectedIcon = document.getElementById('selectedIcon');
             const previewIcon = document.getElementById('previewIcon');
             const previewText = document.getElementById('previewText');
+            const previewBadge = document.getElementById('previewBadge');
             
             const iconPath = iconPaths[selectedIcon.value];
             previewIcon.innerHTML = '<path d="' + iconPath + '"/>';
@@ -517,6 +584,10 @@
             } else {
                 previewText.style.display = 'none';
             }
+            
+            // Update badge colors
+            const selectedColors = getSelectedColors();
+            previewBadge.style.background = selectedColors;
             
             // Track icon selection
             trackEvent('icon_selected', 'customization', selectedIcon.value);
@@ -571,12 +642,14 @@
             const iconSvg = iconPaths[selectedIcon.value];
             const animationCSS = getAnimationCSS(selectedAnimation.value);
             const displayText = getDisplayText();
+            const selectedColors = getSelectedColors();
             
             // Track successful code generation
             trackEvent('code_generated', 'conversion', 'success', 1);
             trackEvent('final_animation_choice', 'conversion_detail', selectedAnimation.value);
             trackEvent('final_icon_choice', 'conversion_detail', selectedIcon.value);
             trackEvent('final_text_choice', 'conversion_detail', document.getElementById('textOption').value);
+            trackEvent('final_color_choice', 'conversion_detail', document.getElementById('colorOption').value);
             trackEvent('interaction_count', 'engagement', 'total_customizations', interactionCount);
             
             const code = `<div id="systeme-badge" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999;">
@@ -588,7 +661,7 @@
     .systeme-badge-container {
       display: flex;
       align-items: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: ${selectedColors};
       border-radius: 25px;
       padding: 8px ${displayText ? '8px' : '12px'};
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
